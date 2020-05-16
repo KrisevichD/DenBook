@@ -2,7 +2,7 @@
 
 namespace App;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -49,4 +49,20 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token', 'updated_at'
     ];
+
+    /**
+     * @param Blueprint $table
+     * @param string|array $columns
+     */
+    public static function fkOnId(Blueprint $table, $columns)
+    {
+        $userTable = (new User())->getTable();
+
+        $table->foreign($columns)
+            ->on($userTable)
+            ->references('id')
+            ->onUpdate('cascade')
+            ->onDelete('cascade');
+    }
+
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\User;
+use App\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
 
 Route::post('register', function (Request $request) {
     $name     = $request->name;
@@ -55,4 +57,11 @@ Route::get('login', function (Request $request) {
 
 Route::get('users', function (Request $request) {
     return User::all();
+});
+
+
+Route::get('videos', function (Request $request) {
+    $id = $request->id;
+
+    return Video::findOrFail($id);
 });
