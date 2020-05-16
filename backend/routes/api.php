@@ -36,8 +36,7 @@ Route::post('register', function (Request $request) {
 });
 
 
-// TODO: post -> get
-Route::post('login', function (Request $request) {
+Route::get('login', function (Request $request) {
     $name     = $request->name;
     $password = $request->password;
 
@@ -54,7 +53,6 @@ Route::post('login', function (Request $request) {
 });
 
 
-// TODO: post -> get
-Route::post('users', function (Request $request) {
+Route::get('users', function (Request $request) {
     return User::all();
 });
