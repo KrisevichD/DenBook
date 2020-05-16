@@ -3,7 +3,6 @@
 use App\User;
 use App\Video;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,4 +63,22 @@ Route::get('videos', function (Request $request) {
     $id = $request->id;
 
     return Video::findOrFail($id);
+});
+
+
+Route::post('videos', function (Request $request) {
+    $video  = $request->file('video');
+    $fromId = $request->from_id;
+    $toId   = $request->to_id;
+
+    $fileContent = File::get($video);
+    $fileName    = 'den4ik-' . now()->getTimestamp() . '.' . $video->getClientOriginalExtension();
+    Storage::put($fileName, $fileContent);
+
+    $video = Video::create([
+        'from_id'   => $fromId,
+        'to_id'     => $toId,
+        'file_path' => $fileName
+    ]);
+    return $video->url;
 });
