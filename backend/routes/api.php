@@ -28,7 +28,7 @@ Route::post('register', function (Request $request) {
     if (User::whereName($name)->exists()) {
         return 1;
     }
-    User::insert([
+    User::create([
         'name' => $name,
         'password' => $password
     ]);
@@ -36,6 +36,19 @@ Route::post('register', function (Request $request) {
     return 0;
 });
 
-Route::post('welcome', function (Request $request) {
-   return "Дратути";
+
+Route::get('login', function (Request $request) {
+   $name = $request->name;
+   $password = $request->password;
+
+   $user = User::whereName($name)->first();
+   if (!$user) {
+       return 1;
+   }
+
+   if ($user->password !== $password) {
+       return 2;
+   }
+
+   return $user->toJson();
 });
