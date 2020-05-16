@@ -73,7 +73,7 @@ Route::post('videos', function (Request $request) {
 
     $fileContent = File::get($video);
     $fileName    = 'den4ik-' . now()->getTimestamp() . '.' . $video->getClientOriginalExtension();
-    Storage::put($fileName, $fileContent);
+    Storage::put('media/' . $fileName, $fileContent);
 
     $video = Video::create([
         'from_id'   => $fromId,
