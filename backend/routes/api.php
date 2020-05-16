@@ -19,9 +19,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
 Route::post('register', function (Request $request) {
-    $name = $request->name;
+    $name     = $request->name;
     $password = $request->password;
 
     // TODO: convert to transaction
@@ -29,7 +28,7 @@ Route::post('register', function (Request $request) {
         return 1;
     }
     User::create([
-        'name' => $name,
+        'name'     => $name,
         'password' => $password
     ]);
 
@@ -37,18 +36,25 @@ Route::post('register', function (Request $request) {
 });
 
 
-Route::get('login', function (Request $request) {
-   $name = $request->name;
-   $password = $request->password;
+// TODO: post -> get
+Route::post('login', function (Request $request) {
+    $name     = $request->name;
+    $password = $request->password;
 
-   $user = User::whereName($name)->first();
-   if (!$user) {
-       return 1;
-   }
+    $user = User::whereName($name)->first();
+    if (!$user) {
+        return 1;
+    }
 
-   if ($user->password !== $password) {
-       return 2;
-   }
+    if ($user->password !== $password) {
+        return 2;
+    }
 
-   return $user->toJson();
+    return $user->toJson();
+});
+
+
+// TODO: post -> get
+Route::post('users', function (Request $request) {
+    return User::all();
 });
