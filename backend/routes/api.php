@@ -15,6 +15,17 @@ use Illuminate\Http\Request;
 |
 */
 
+const REGISTER_CODE_SUCCESS = 0;
+
+const REGISTER_CODE_NAME_EXISTS = 1;
+
+const REGISTER_CODE_INVALID_FIELDS = 2;
+
+const LOGIN_CODE_NAME_NOT_EXISTS = 1;
+
+const LOGIN_CODE_PASSWORD_NOT_MATCH = 2;
+
+
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -24,16 +35,20 @@ Route::post('register', function (Request $request) {
     $name     = $request->name;
     $password = $request->password;
 
+    if (!$name || !$password) {
+        return REGISTER_CODE_INVALID_FIELDS;
+    }
+
     // TODO: convert to transaction
     if (User::whereName($name)->exists()) {
-        return 1;
+        return REGISTER_CODE_NAME_EXISTS;
     }
     User::create([
         'name'     => $name,
         'password' => $password
     ]);
 
-    return 0;
+    return REGISTER_CODE_SUCCESS;
 });
 
 
@@ -43,11 +58,11 @@ Route::get('login', function (Request $request) {
 
     $user = User::whereName($name)->first();
     if (!$user) {
-        return 1;
+        return LOGIN_CODE_NAME_NOT_EXISTS;
     }
 
     if ($user->password !== $password) {
-        return 2;
+        return LOGIN_CODE_PASSWORD_NOT_MATCH;
     }
 
     return $user->toJson();
