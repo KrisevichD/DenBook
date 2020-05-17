@@ -1,6 +1,7 @@
 <?php
 
 use App\Helpers\Cast;
+use App\Helpers\Media;
 use App\User;
 use App\Video;
 use Illuminate\Database\Eloquent\Builder;
@@ -49,7 +50,6 @@ Route::post('register', function (Request $request) {
     if (User::whereName($name)->exists()) {
         return REGISTER_CODE_NAME_EXISTS;
     }
-
     try {
         return User::create([
             'name'     => $name,
@@ -73,7 +73,7 @@ Route::get('login', function (Request $request) {
         return LOGIN_CODE_PASSWORD_NOT_MATCH;
     }
 
-    return $user->toJson();
+    return $user;
 });
 
 
@@ -84,34 +84,48 @@ Route::get('users', function (Request $request) {
 
     if ($userId) {
         $user = User::find($userId);
-        return $user ? $user->toJson() : USERS_CODE_NO_USER;
+        return $user ?: USERS_CODE_NO_USER;
     }
 
     return User::all();
+});
+
+Route::post('users/{id}', function (Request $request, int $id) {
+    $imageFile = $request->file('image');
+    $user      = User::find($id);
+    if (!$user) {
+        return USERS_CODE_NO_USER;
+    }
+
+    $imagePath = "img/u-$id.{$imageFile->getClientOriginalExtension()}";
+    Storage::put(Media::getAppStorageRelativePath($imagePath), File::get($imageFile));
+
+    $user->image_path = $imagePath;
+    $user->save();
+    return $user;
 });
 
 
 // ---------------- VIDEOS -------------------------------
 
 Route::post('videos', function (Request $request) {
-    $file   = $request->file('video');
-    $fromId = Cast::toMaybeInt($request->from_id);
-    $toId   = Cast::toMaybeInt($request->to_id);
+    $videoFile = $request->file('video');
+    $fromId    = Cast::toMaybeInt($request->from_id);
+    $toId      = Cast::toMaybeInt($request->to_id);
 
     $video = Video::create([
         'from_id' => $fromId,
         'to_id'   => $toId,
     ]);
 
-    $filePath    = "video/$video->id.{$file->getClientOriginalExtension()}";
-    $fileContent = File::get($file);
-    Storage::put(Video::getAppStorageRelativePath($filePath), $fileContent);
+    $filePath = "video/$video->id.{$videoFile->getClientOriginalExtension()}";
+    Storage::put(Media::getAppStorageRelativePath($filePath), File::get($videoFile));
 
     $secondsAfterStart = 1;
     $previewPath       = "img/v-$video->id.png";
-    $ffVideo           = FFMpeg\FFMpeg::create()->open(Video::getAbsolutePath($filePath));
+    $ffVideo           = FFMpeg\FFMpeg::create()->open(Media::getAbsolutePath($filePath));
     $frame             = $ffVideo->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($secondsAfterStart));
-    $frame->save(Video::getAbsolutePath($previewPath));
+    $frame->save(Media::getAbsolutePath($previewPath));
 
     $video->file_path    = $filePath;
     $video->preview_path = $previewPath;
@@ -125,7 +139,7 @@ Route::get('videos', function (Request $request) {
     $fromId = Cast::toMaybeInt($request->from_id);
     $toId   = Cast::toMaybeInt($request->to_id);
 
-    return Video::with(['fromUser:id,name,image_url', 'toUser:id,name,image_url'])
+    return Video::with(['fromUser:id,name,image_path', 'toUser:id,name,image_path'])
         ->when($userId, function (Builder $query) use ($userId) {
             return $query->where('from_id', $userId)
                 ->orWhere('to_id', $userId);

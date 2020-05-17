@@ -3,7 +3,7 @@
 namespace App\Helpers;
 
 
-class Cast
+abstract class Cast
 {
     public static function toMaybeInt($value): ?int
     {

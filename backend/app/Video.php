@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Helpers\Media;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 
@@ -53,9 +54,7 @@ class Video extends Model
      * @var array
      */
     protected $hidden = [
-        'file_path',
-        'preview_path',
-        'updated_at'
+        'file_path', 'preview_path', 'updated_at'
     ];
 
     protected $attributes = [
@@ -79,27 +78,12 @@ class Video extends Model
 
     public function getUrlAttribute()
     {
-        return self::getPublicUrl($this->file_path);
+        return Media::getPublicUrl($this->file_path);
     }
 
     public function getPreviewUrlAttribute()
     {
-        return self::getPublicUrl($this->preview_path);
-    }
-
-    public static function getPublicUrl(?string $filePath): ?string
-    {
-        return $filePath ? config('app.url') . "/media/$filePath" : null;
-    }
-
-    public static function getAbsolutePath(string $filePath): string
-    {
-        return storage_path("app/media/$filePath");
-    }
-
-    public static function getAppStorageRelativePath($filePath): string
-    {
-        return "media/$filePath";
+        return Media::getPublicUrl($this->preview_path);
     }
 }
 

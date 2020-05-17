@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Helpers\Media;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -27,8 +28,9 @@ use Illuminate\Notifications\Notifiable;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property string|null $image_url
- * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereImageUrl($value)
+ * @property string|null $image_path
+ * @property-read mixed $image_url
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereImagePath($value)
  */
 class User extends Authenticatable
 {
@@ -49,9 +51,18 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token', 'updated_at'
+        'password', 'remember_token', 'updated_at', 'image_path'
     ];
-    
+
+    protected $appends = [
+        'image_url'
+    ];
+
+    public function getImageUrlAttribute()
+    {
+        return Media::getPublicUrl($this->image_path);
+    }
+
     /**
      * @param Blueprint $table
      * @param string|array $columns
