@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\Cast;
 use App\User;
 use App\Video;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,6 +33,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 
+// ---------------- REGISTER/LOGIN ---------------------------
+
 Route::post('register', function (Request $request) {
     $name     = $request->name;
     $password = $request->password;
@@ -55,7 +58,6 @@ Route::post('register', function (Request $request) {
     }
 });
 
-
 Route::get('login', function (Request $request) {
     $name     = $request->name;
     $password = $request->password;
@@ -73,33 +75,46 @@ Route::get('login', function (Request $request) {
 });
 
 
+// ---------------- USERS -------------------------------
+
 Route::get('users', function (Request $request) {
     return User::all();
 });
 
 
-Route::post('videos', function (Request $request) {
-    $video  = $request->file('video');
-    $fromId = $request->from_id;
-    $toId   = $request->to_id;
+// ---------------- VIDEOS -------------------------------
 
-    $fileContent = File::get($video);
-    $fileName    = 'den4ik-' . now()->getTimestamp() . '.' . $video->getClientOriginalExtension();
-    Storage::put('media/' . $fileName, $fileContent);
+Route::post('videos', function (Request $request) {
+    $file   = $request->file('video');
+    $fromId = Cast::toMaybeInt($request->from_id);
+    $toId   = Cast::toMaybeInt($request->to_id);
 
     $video = Video::create([
-        'from_id'   => $fromId,
-        'to_id'     => $toId,
-        'file_path' => $fileName
+        'from_id' => $fromId,
+        'to_id'   => $toId,
     ]);
-    return $video->url;
+
+    $filePath    = "video/$video->id.{$file->getClientOriginalExtension()}";
+    $fileContent = File::get($file);
+    Storage::put(Video::getAppStorageRelativePath($filePath), $fileContent);
+
+    $secondsAfterStart = 1;
+    $previewPath       = "img/v-$video->id.png";
+    $ffVideo           = FFMpeg\FFMpeg::create()->open(Video::getAbsolutePath($filePath));
+    $frame             = $ffVideo->frame(FFMpeg\Coordinate\TimeCode::fromSeconds($secondsAfterStart));
+    $frame->save(Video::getAbsolutePath($previewPath));
+
+    $video->file_path    = $filePath;
+    $video->preview_path = $previewPath;
+    $video->save();
+
+    return $video->public_url;
 });
 
-
 Route::get('videos', function (Request $request) {
-    $fromId = $request->from_id ? (int)$request->from_id : null;
-    $toId   = $request->to_id ? (int)$request->to_id : null;
-    $userId = $request->user_id ? (int)$request->user_id : null;
+    $userId = Cast::toMaybeInt($request->user_id);
+    $fromId = Cast::toMaybeInt($request->from_id);
+    $toId   = Cast::toMaybeInt($request->to_id);
 
     if (!$fromId && !$toId && !$userId) {
         return Video::all();

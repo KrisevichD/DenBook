@@ -16,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
  * @property string|null $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read mixed $url
+ * @property-read mixed $public_url
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video query()
@@ -28,6 +28,10 @@ use Illuminate\Notifications\Notifiable;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video whereToId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property string|null $preview_path
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
+ * @property-read int|null $notifications_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Video wherePreviewPath($value)
  */
 class Video extends Model
 {
@@ -49,14 +53,32 @@ class Video extends Model
         'file_path'
     ];
 
+    protected $attributes = [
+        'file_path' => 'error'
+    ];
+
     public $appends = [
         'url'
     ];
 
-    public function getUrlAttribute()
+    public function getPublicUrlAttribute()
     {
-        return config('app.url') . '/media/'. $this->file_path;
+        return self::getPublicUrl($this->file_path);
     }
 
+    public static function getPublicUrl(string $filePath): string
+    {
+        return config('app.url') . "/media/$filePath";
+    }
+
+    public static function getAbsolutePath(string $filePath): string
+    {
+        return storage_path("app/media/$filePath");
+    }
+
+    public static function getAppStorageRelativePath(string $filePath): string
+    {
+        return "media/$filePath";
+    }
 }
 
