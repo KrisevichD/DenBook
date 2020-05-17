@@ -125,7 +125,7 @@ Route::get('videos', function (Request $request) {
     $fromId = Cast::toMaybeInt($request->from_id);
     $toId   = Cast::toMaybeInt($request->to_id);
 
-    return Video::with(['fromUser', 'toUser'])
+    return Video::with(['fromUser:id,name,image_url', 'toUser:id,name,image_url'])
         ->when($userId, function (Builder $query) use ($userId) {
             return $query->where('from_id', $userId)
                 ->orWhere('to_id', $userId);
