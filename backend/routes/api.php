@@ -43,12 +43,15 @@ Route::post('register', function (Request $request) {
     if (User::whereName($name)->exists()) {
         return REGISTER_CODE_NAME_EXISTS;
     }
-    User::create([
-        'name'     => $name,
-        'password' => $password
-    ]);
 
-    return REGISTER_CODE_SUCCESS;
+    try {
+        return User::create([
+            'name'     => $name,
+            'password' => $password
+        ]);
+    } catch (\PDOException $e) {
+        return REGISTER_CODE_NAME_EXISTS;
+    }
 });
 
 
