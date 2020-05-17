@@ -27,6 +27,8 @@ const LOGIN_CODE_NAME_NOT_EXISTS = 1;
 
 const LOGIN_CODE_PASSWORD_NOT_MATCH = 2;
 
+const USERS_CODE_NO_USER = '-';
+
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
@@ -78,6 +80,13 @@ Route::get('login', function (Request $request) {
 // ---------------- USERS -------------------------------
 
 Route::get('users', function (Request $request) {
+    $userId = Cast::toMaybeInt($request->user_id);
+
+    if ($userId) {
+        $user = User::find($userId);
+        return $user ? $user->toJson() : USERS_CODE_NO_USER;
+    }
+
     return User::all();
 });
 
