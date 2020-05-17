@@ -16,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
  * @property string|null $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read mixed $public_url
+ * @property-read mixed $url
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video query()
@@ -32,6 +32,7 @@ use Illuminate\Notifications\Notifiable;
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
  * @property-read int|null $notifications_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video wherePreviewPath($value)
+ * @property-read mixed $preview_url
  */
 class Video extends Model
 {
@@ -50,25 +51,32 @@ class Video extends Model
      * @var array
      */
     protected $hidden = [
-        'file_path'
+        'file_path',
+        'preview_path'
     ];
 
     protected $attributes = [
-        'file_path' => 'error'
+        'file_path'    => 'error',
+        'preview_path' => 'error',
     ];
 
     public $appends = [
-        'url'
+        'url', 'preview_url'
     ];
 
-    public function getPublicUrlAttribute()
+    public function getUrlAttribute()
     {
         return self::getPublicUrl($this->file_path);
     }
 
-    public static function getPublicUrl(string $filePath): string
+    public function getPreviewUrlAttribute()
     {
-        return config('app.url') . "/media/$filePath";
+        return self::getPublicUrl($this->preview_path);
+    }
+
+    public static function getPublicUrl(?string $filePath): ?string
+    {
+        return $filePath ? config('app.url') . "/media/$filePath" : null;
     }
 
     public static function getAbsolutePath(string $filePath): string
@@ -76,7 +84,7 @@ class Video extends Model
         return storage_path("app/media/$filePath");
     }
 
-    public static function getAppStorageRelativePath(string $filePath): string
+    public static function getAppStorageRelativePath($filePath): string
     {
         return "media/$filePath";
     }

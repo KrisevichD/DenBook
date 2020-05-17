@@ -108,7 +108,7 @@ Route::post('videos', function (Request $request) {
     $video->preview_path = $previewPath;
     $video->save();
 
-    return $video->public_url;
+    return $video->url;
 });
 
 Route::get('videos', function (Request $request) {
