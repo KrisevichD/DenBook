@@ -2,6 +2,7 @@
 
 use App\User;
 use App\Video;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 /*
@@ -77,13 +78,6 @@ Route::get('users', function (Request $request) {
 });
 
 
-Route::get('videos', function (Request $request) {
-    $id = $request->id;
-
-    return Video::findOrFail($id);
-});
-
-
 Route::post('videos', function (Request $request) {
     $video  = $request->file('video');
     $fromId = $request->from_id;
@@ -99,4 +93,25 @@ Route::post('videos', function (Request $request) {
         'file_path' => $fileName
     ]);
     return $video->url;
+});
+
+
+Route::get('videos', function (Request $request) {
+    $fromId = $request->from_id ? (int)$request->from_id : null;
+    $toId   = $request->to_id ? (int)$request->to_id : null;
+    $userId = $request->user_id ? (int)$request->user_id : null;
+
+    if (!$fromId && !$toId && !$userId) {
+        return Video::all();
+    }
+
+    return Video::when($userId, function (Builder $query) use ($userId) {
+        return $query->where('from_id', $userId)
+            ->orWhere('to_id', $userId);
+    })->when($fromId, function (Builder $query) use ($fromId) {
+        info(gettype($fromId));
+        return $query->where('from_id', $fromId);
+    })->when($toId, function (Builder $query) use ($toId) {
+        return $query->where('to_id', $toId);
+    })->get();
 });
