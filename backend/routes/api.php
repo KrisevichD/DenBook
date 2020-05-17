@@ -125,13 +125,17 @@ Route::get('videos', function (Request $request) {
     $fromId = Cast::toMaybeInt($request->from_id);
     $toId   = Cast::toMaybeInt($request->to_id);
 
-    return Video::when($userId, function (Builder $query) use ($userId) {
-        return $query->where('from_id', $userId)
-            ->orWhere('to_id', $userId);
-    })->when($fromId, function (Builder $query) use ($fromId) {
-        info(gettype($fromId));
-        return $query->where('from_id', $fromId);
-    })->when($toId, function (Builder $query) use ($toId) {
-        return $query->where('to_id', $toId);
-    })->latest()->get();
+    return Video::with(['fromUser', 'toUser'])
+        ->when($userId, function (Builder $query) use ($userId) {
+            return $query->where('from_id', $userId)
+                ->orWhere('to_id', $userId);
+        })
+        ->when($fromId, function (Builder $query) use ($fromId) {
+            return $query->where('from_id', $fromId);
+        })
+        ->when($toId, function (Builder $query) use ($toId) {
+            return $query->where('to_id', $toId);
+        })
+        ->latest()
+        ->get();
 });

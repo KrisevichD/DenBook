@@ -33,6 +33,8 @@ use Illuminate\Notifications\Notifiable;
  * @property-read int|null $notifications_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Video wherePreviewPath($value)
  * @property-read mixed $preview_url
+ * @property-read \App\User $fromUser
+ * @property-read \App\User $toUser
  */
 class Video extends Model
 {
@@ -64,6 +66,16 @@ class Video extends Model
     public $appends = [
         'url', 'preview_url'
     ];
+
+    public function fromUser()
+    {
+        return $this->belongsTo(User::class, 'from_id', 'id');
+    }
+
+    public function toUser()
+    {
+        return $this->belongsTo(User::class, 'to_id', 'id');
+    }
 
     public function getUrlAttribute()
     {

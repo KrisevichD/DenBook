@@ -27,6 +27,8 @@ use Illuminate\Notifications\Notifiable;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property string|null $image_url
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereImageUrl($value)
  */
 class User extends Authenticatable
 {
@@ -49,7 +51,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token', 'updated_at'
     ];
-
+    
     /**
      * @param Blueprint $table
      * @param string|array $columns
