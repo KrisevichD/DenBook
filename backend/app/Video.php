@@ -52,7 +52,8 @@ class Video extends Model
      */
     protected $hidden = [
         'file_path',
-        'preview_path'
+        'preview_path',
+        'updated_at'
     ];
 
     protected $attributes = [
