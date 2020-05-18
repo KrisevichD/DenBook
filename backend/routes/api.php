@@ -1,8 +1,9 @@
-<?php
+<?php /** @noinspection PhpUndefinedClassInspection */
 
 use App\Dialog;
 use App\Helpers\Cast;
 use App\Helpers\Media;
+use App\Helpers\Query;
 use App\User;
 use App\Video;
 use Illuminate\Database\Eloquent\Builder;
@@ -154,27 +155,15 @@ Route::get('videos', function (Request $request) {
     $fromId = Cast::toMaybeInt($request->from_id);
     $toId   = Cast::toMaybeInt($request->to_id);
 
-    $query = Video::with(['fromUser:id,name,image_path', 'toUser:id,name,image_path']);
-
-    if ($userId && $peerId) {
-        return $query
-            ->select()
-            ->where(function (Builder $query) use ($userId, $peerId) {
-                return $query->where('from_id', $userId)
-                    ->where('to_id', $peerId);
-            })
-            ->orWhere(function (Builder $query) use ($userId, $peerId) {
-                return $query->where('from_id', $peerId)
-                    ->where('to_id', $userId);
-            })
-            ->latest()
-            ->get();
-    }
-
-    return $query
+    return Video::with(['fromUser:id,name,image_path', 'toUser:id,name,image_path'])
         ->when($userId, function (Builder $query) use ($userId) {
-            return $query->where('from_id', $userId)
-                ->orWhere('to_id', $userId);
+            return $query->where(Query::orColumns('from_id', $userId, 'to_id', $userId));
+        })
+        ->when($userId && $peerId, function (Builder $query) use ($userId, $peerId) {
+            $query->orWhereWithParenthesis(
+                Query::andColumns('from_id', $userId, 'to_id', $peerId),
+                Query::andColumns('from_id', $peerId, 'to_id', $userId)
+            );
         })
         ->when($fromId, function (Builder $query) use ($fromId) {
             return $query->where('from_id', $fromId);
@@ -185,7 +174,6 @@ Route::get('videos', function (Request $request) {
         ->latest()
         ->get();
 });
-
 
 // ---------------- DIALOGS -------------------------------
 

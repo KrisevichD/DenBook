@@ -16,7 +16,8 @@
         "intervention/image": "^2.5",
         "laravel/framework": "^7.0",
         "laravel/tinker": "^2.0",
-        "php-ffmpeg/php-ffmpeg": "^0.16.0"
+        "php-ffmpeg/php-ffmpeg": "^0.16.0",
+        "tutorigo/laravel-ide-macros": "^1.4"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^2.7",
