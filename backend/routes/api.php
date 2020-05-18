@@ -1,11 +1,13 @@
 <?php
 
+use App\Dialog;
 use App\Helpers\Cast;
 use App\Helpers\Media;
 use App\User;
 use App\Video;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Intervention\Image\Facades\Image;
 
 /*
 |--------------------------------------------------------------------------
@@ -100,6 +102,17 @@ Route::post('users/{id}', function (Request $request, int $id) {
     $imagePath = "img/u-$id.{$imageFile->getClientOriginalExtension()}";
     Storage::put(Media::getAppStorageRelativePath($imagePath), File::get($imageFile));
 
+    $image  = Image::make(Media::getAbsolutePath($imagePath));
+    $width  = $image->width();
+    $height = $image->height();
+
+
+    if ($width < $height) {
+
+    }
+
+//    $image->crop(100, 100, 25, 25);
+
     $user->image_path = $imagePath;
     $user->save();
     return $user;
@@ -136,10 +149,29 @@ Route::post('videos', function (Request $request) {
 
 Route::get('videos', function (Request $request) {
     $userId = Cast::toMaybeInt($request->user_id);
+    $peerId = Cast::toMaybeInt($request->peer_id);
+
     $fromId = Cast::toMaybeInt($request->from_id);
     $toId   = Cast::toMaybeInt($request->to_id);
 
-    return Video::with(['fromUser:id,name,image_path', 'toUser:id,name,image_path'])
+    $query = Video::with(['fromUser:id,name,image_path', 'toUser:id,name,image_path']);
+
+    if ($userId && $peerId) {
+        return $query
+            ->select()
+            ->where(function (Builder $query) use ($userId, $peerId) {
+                return $query->where('from_id', $userId)
+                    ->where('to_id', $peerId);
+            })
+            ->orWhere(function (Builder $query) use ($userId, $peerId) {
+                return $query->where('from_id', $peerId)
+                    ->where('to_id', $userId);
+            })
+            ->latest()
+            ->get();
+    }
+
+    return $query
         ->when($userId, function (Builder $query) use ($userId) {
             return $query->where('from_id', $userId)
                 ->orWhere('to_id', $userId);
@@ -151,5 +183,19 @@ Route::get('videos', function (Request $request) {
             return $query->where('to_id', $toId);
         })
         ->latest()
+        ->get();
+});
+
+
+// ---------------- DIALOGS -------------------------------
+
+Route::get('dialogs', function (Request $request) {
+    $userId = Cast::toMaybeInt($request->user_id);
+    if (!$userId) {
+        return [];
+    }
+
+    return Dialog::whereUserId($userId)
+        ->with(['peerUser:id,name,image_path', 'lastVideo'])
         ->get();
 });

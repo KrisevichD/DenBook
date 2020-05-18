@@ -85,5 +85,25 @@ class Video extends Model
     {
         return Media::getPublicUrl($this->preview_path);
     }
+
+    public static function create($attributes = [])
+    {
+        $model = static::query()->create($attributes);
+        ['from_id' => $fromId, 'to_id' => $toId] = $attributes;
+        if (!$fromId || !$toId) {
+            return $model;
+        }
+
+        Dialog::updateOrCreate([
+            'user_id' => $fromId,
+            'peer_id' => $toId,
+        ], [
+            'last_video_id' => $model->id
+        ]);
+
+        return $model;
+    }
+
+
 }
 
