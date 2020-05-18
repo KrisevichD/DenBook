@@ -100,19 +100,19 @@ Route::post('users/{id}', function (Request $request, int $id) {
         return USERS_CODE_NO_USER;
     }
 
-    $imagePath = "img/u-$id.{$imageFile->getClientOriginalExtension()}";
-    Storage::put(Media::getAppStorageRelativePath($imagePath), File::get($imageFile));
+    $imagePath                 = "img/u-$id.{$imageFile->getClientOriginalExtension()}";
+    $imageAbsolutePath         = Media::getAbsolutePath($imagePath);
+    $originalImagePath         = "img/u-$id-orig.{$imageFile->getClientOriginalExtension()}";
+    $originalImageAbsolutePath = Media::getAbsolutePath($originalImagePath);
 
-    $image  = Image::make(Media::getAbsolutePath($imagePath));
-    $width  = $image->width();
-    $height = $image->height();
+    Storage::put(Media::getAppStorageRelativePath($originalImagePath), File::get($imageFile));
 
-
-    if ($width < $height) {
-
+    $image = Image::make($originalImageAbsolutePath);
+    if ($image->width() !== $image->height()) {
+        Media::cropToSquare($image)->save($imageAbsolutePath);
+    } else {
+        File::copy($originalImageAbsolutePath, $imageAbsolutePath);
     }
-
-//    $image->crop(100, 100, 25, 25);
 
     $user->image_path = $imagePath;
     $user->save();
