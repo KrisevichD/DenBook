@@ -30,6 +30,7 @@ use Illuminate\Notifications\Notifiable;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Dialog whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Dialog whereUserId($value)
  * @mixin \Eloquent
+ * @property-read \App\Video|null $lastVideo
  */
 class Dialog extends Model
 {

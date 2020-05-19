@@ -31,6 +31,8 @@ use Illuminate\Notifications\Notifiable;
  * @property string|null $image_path
  * @property-read mixed $image_url
  * @method static \Illuminate\Database\Eloquent\Builder|\App\User whereImagePath($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Image[] $images
+ * @property-read int|null $images_count
  */
 class User extends Authenticatable
 {
@@ -57,6 +59,11 @@ class User extends Authenticatable
     protected $appends = [
         'image_url'
     ];
+
+    public function images()
+    {
+        return $this->morphToMany(Image::class, 'imageable');
+    }
 
     public function getImageUrlAttribute()
     {

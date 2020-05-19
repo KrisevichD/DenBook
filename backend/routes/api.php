@@ -100,21 +100,34 @@ Route::post('users/{id}', function (Request $request, int $id) {
         return USERS_CODE_NO_USER;
     }
 
-    $imagePath                 = "img/u-$id.{$imageFile->getClientOriginalExtension()}";
-    $imageAbsolutePath         = Media::getAbsolutePath($imagePath);
-    $originalImagePath         = "img/u-$id-orig.{$imageFile->getClientOriginalExtension()}";
+    $now                       = now()->getTimestamp();
+    $name                      = $imageFile->getClientOriginalName();
+    $extension                 = $imageFile->getClientOriginalExtension();
+    $originalImagePath         = "img/u-$id-orig-$now.$extension";
     $originalImageAbsolutePath = Media::getAbsolutePath($originalImagePath);
+    $imagePath                 = "img/u-$id-$now.$extension";
+    $imageAbsolutePath         = Media::getAbsolutePath($imagePath);
 
     Storage::put(Media::getAppStorageRelativePath($originalImagePath), File::get($imageFile));
 
-    $image = Image::make($originalImageAbsolutePath);
-    if ($image->width() !== $image->height()) {
-        Media::cropToSquare($image)->save($imageAbsolutePath);
+    $imageView = Image::make($originalImageAbsolutePath);
+    $width     = $imageView->width();
+    $height    = $imageView->height();
+    if ($width !== $height) {
+        Media::cropToSquare($imageView)->save($imageAbsolutePath);
     } else {
         File::copy($originalImageAbsolutePath, $imageAbsolutePath);
     }
+    $image = \App\Image::create([
+        'name'      => $name,
+        'file_path' => $imagePath,
+        'width'     => $width,
+        'height'    => $height,
+        'extension' => $extension
+    ]);
 
     $user->image_path = $imagePath;
+    $user->images()->attach($image->id);
     $user->save();
     return $user;
 });
