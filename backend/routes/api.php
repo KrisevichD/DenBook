@@ -188,6 +188,14 @@ Route::get('videos', function (Request $request) {
         ->get();
 });
 
+Route::delete('videos/{id}', function (Request $request, int $id) {
+    return Video::setDeleted($id);
+});
+
+Route::post('videos/{id}/delete', function (Request $request, int $id) {
+    return Video::setDeleted($id);
+});
+
 // ---------------- DIALOGS -------------------------------
 
 Route::get('dialogs', function (Request $request) {

@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Helpers\Media;
+use App\Helpers\Query;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 
@@ -36,6 +37,8 @@ use Illuminate\Notifications\Notifiable;
  * @property-read mixed $preview_url
  * @property-read \App\User $fromUser
  * @property-read \App\User $toUser
+ * @property bool $deleted
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Video whereDeleted($value)
  */
 class Video extends Model
 {
@@ -86,6 +89,11 @@ class Video extends Model
         return Media::getPublicUrl($this->preview_path);
     }
 
+    protected function newBaseQueryBuilder()
+    {
+        return parent::newBaseQueryBuilder()->where('deleted', false);
+    }
+
     public static function create($attributes = [])
     {
         $model = static::query()->create($attributes);
@@ -104,6 +112,34 @@ class Video extends Model
         return $model;
     }
 
+    /**
+     * @param int $id
+     * @return int
+     * @throws \Throwable
+     */
+    public static function setDeleted(int $id)
+    {
+        return \DB::transaction(function () use ($id) {
 
+            $res = (int)self::whereId($id)
+                ->update(['deleted' => true]);
+
+            $dialogs = Dialog::whereLastVideoId($id)->get();
+            foreach ($dialogs as $dialog) {
+                /** @var Video|null $lastVideo */
+                $lastVideo = Video::where(
+                    Query::andColumns('from_id', $dialog->user_id, 'to_id', $dialog->peer_id)
+                )->orWhere(Query::andColumns('from_id', $dialog->peer_id, 'to_id', $dialog->user_id)
+                )->first(['id']);
+
+                if (!$lastVideo) {
+                    $dialog->delete();
+                } else {
+                    $dialog->update(['last_video_id' => $lastVideo->id]);
+                }
+            }
+            return $res;
+        });
+    }
 }
 
