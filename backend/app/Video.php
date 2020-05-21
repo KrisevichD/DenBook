@@ -135,7 +135,10 @@ class Video extends Model
                 if (!$lastVideo) {
                     $dialog->delete();
                 } else {
-                    $dialog->update(['last_video_id' => $lastVideo->id]);
+                    $dialog->update([
+                        'last_video_id'         => $lastVideo->id,
+                        'last_video_created_at' => $lastVideo->created_at
+                    ]);
                 }
             }
             return $res;

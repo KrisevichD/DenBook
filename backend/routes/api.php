@@ -206,5 +206,6 @@ Route::get('dialogs', function (Request $request) {
 
     return Dialog::whereUserId($userId)
         ->with(['peerUser:id,name,image_path', 'lastVideo'])
+        ->orderByDesc('last_video_created_at')
         ->get();
 });
