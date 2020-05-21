@@ -96,6 +96,7 @@ class Video extends Model
 
     public static function create($attributes = [])
     {
+        /** @var Video $model */
         $model = static::query()->create($attributes);
         ['from_id' => $fromId, 'to_id' => $toId] = $attributes;
         if (!$fromId || !$toId) {
@@ -106,7 +107,8 @@ class Video extends Model
             'user_id' => $fromId,
             'peer_id' => $toId,
         ], [
-            'last_video_id' => $model->id
+            'last_video_id' => $model->id,
+            'last_video_created_at' => $model->created_at
         ]);
 
         return $model;
@@ -136,7 +138,7 @@ class Video extends Model
                     $dialog->delete();
                 } else {
                     $dialog->update([
-                        'last_video_id'         => $lastVideo->id,
+                        'last_video_id' => $lastVideo->id,
                         'last_video_created_at' => $lastVideo->created_at
                     ]);
                 }
